@@ -33,9 +33,10 @@ target_prompt = {
 
 
 def call_api(prompt,mode="dsv3"):
-'''
-Implement your own call_api function here.
-'''
+    '''
+    Implement your own call_api function here.
+    '''
+    reply = None
     return reply
 
 
