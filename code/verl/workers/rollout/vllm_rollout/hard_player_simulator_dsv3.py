@@ -42,7 +42,7 @@ def call_api(prompt,mode="dsv3"):
 
 class PlayerSimulator:
     def __init__(self,save_dir):
-        self.api_key = "YOUR_API_KEY"
+        self.api_key = os.getenv("DEEPSEEK_API_KEY")
         self.header = {
         "Authorization": "Bearer " + self.api_key,
         "Content-Type": "application/json"
