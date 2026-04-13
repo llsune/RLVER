@@ -487,6 +487,10 @@ class vLLMMultiTurnViaChatRollout_think(BaseRollout):
         print("todo_to_batch_idx:",todo_to_batch_idx)
         dialogue_history = []
         contents = [[] for _ in range(batch_size*n)]
+        # [Added/Modified for Dense Reward]: 记录每个模拟器上一轮的情绪值，用于计算差分奖励。
+        previous_emo_points = [sim.emo_point for sim in player_simulators]
+        # [Added/Modified for Dense Reward]: 保存每个样本每一轮的 step reward（delta_e / 10.0）。
+        all_step_rewards = [[] for _ in range(batch_size*n)]
         while True:
             turn_count+=1
             
@@ -561,9 +565,20 @@ class vLLMMultiTurnViaChatRollout_think(BaseRollout):
                 swapped_messages = []
                 assert msg[-1]["role"]=="assistant"
                 swapped_messages={"role":"user","content":msg[-1]["content"]}
-                
-                env_response_message = player_simulators[i].reply(swapped_messages["content"])
+
+                # [Added/Modified for Dense Reward]: 修复 simulator 索引，todo[i] 才是当前样本在全局 batch 中的真实索引。
+                i_batch_sample = todo[i]
+                env_response_message = player_simulators[i_batch_sample].reply(swapped_messages["content"])
                 env_response_batched.append(env_response_message)
+
+                # [Added/Modified for Dense Reward]: 计算本轮边际情绪变化作为密集奖励 step_reward = (e_t - e_{t-1}) / 10。
+                current_emo = player_simulators[i_batch_sample].emo_point
+                delta_e = current_emo - previous_emo_points[i_batch_sample]
+                step_reward = delta_e / 10.0
+                original_idx = todo_to_batch_idx[i_batch_sample]
+                all_step_rewards[original_idx].append(step_reward)
+                # [Added/Modified for Dense Reward]: 更新上一轮情绪值供下一轮差分计算。
+                previous_emo_points[i_batch_sample] = current_emo
 
             todo_=todo.copy()
             assert len(todo_)==len(env_response_batched)
@@ -673,20 +688,27 @@ class vLLMMultiTurnViaChatRollout_think(BaseRollout):
             batch_size=new_batch_size,
             )  
         expanded_messagess = []
+        # [Added/Modified for Dense Reward]: 展平每一轮的真实边际奖励，不再复用终局 emo_point。
+        expanded_step_rewards = []
         expanded_emo_point_list = []
         expanded_dialogue_turns = []
         print("batch_size:",batch_size)
         print("dialogue_turns:",dialogue_turns)
         for i in range(batch_size*n):
-            for _ in range(dialogue_turns[i]): 
+            for turn_idx in range(dialogue_turns[i]):
                 expanded_messagess.append(messagess[i])
+                # [Added/Modified for Dense Reward]: 每个展开样本对应其所在轮次的 step reward。
+                expanded_step_rewards.append(all_step_rewards[i][turn_idx])
                 expanded_emo_point_list.append(emo_point_list[i])
                 expanded_dialogue_turns.append(dialogue_turns[i])  
         print("expanded_messagess:",expanded_messagess)
+        print("expanded_step_rewards:",expanded_step_rewards)
         print("expanded_emo_point_list:",expanded_emo_point_list)
         print("expanded_dialogue_turns:",expanded_dialogue_turns)
         non_tensor_batch = {
             'messages': to_1d_np_array(expanded_messagess),
+            # [Added/Modified for Dense Reward]: 新增逐轮 dense reward，供环境直接写入 token 级奖励。
+            'step_reward': to_1d_np_array(expanded_step_rewards),
             'emo_point': to_1d_np_array(expanded_emo_point_list),
             'dialogue_turns': to_1d_np_array(expanded_dialogue_turns),
 

@@ -27,9 +27,11 @@ class URLEnvironment():
             valid_response_length = attention_mask[prompt_length:].sum()
             reward_locs.append(valid_response_length - 1)
 
-        # reward_batched = requests.post(url, json=payload).json()
-        reward_batched = data.non_tensor_batch['emo_point']/100
-        reward_batched = np.maximum(reward_batched, 0)
+        # [Added/Modified for Dense Reward]: 直接读取 rollout 已计算好的逐轮密集奖励（可正可负）。
+        reward_batched = np.asarray(data.non_tensor_batch['step_reward'], dtype=np.float32)
+        # [Added/Modified for Dense Reward]: 保持负奖励以惩罚不当回复，不做截断或归一化。
+        # reward_batched = data.non_tensor_batch['emo_point']/100
+        # reward_batched = np.maximum(reward_batched, 0)
         original_reward_batched = reward_batched.copy()
 
 

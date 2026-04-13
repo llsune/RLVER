@@ -32,11 +32,32 @@ target_prompt = {
     }
 
 
-def call_api(prompt,mode="dsv3"):
+def call_api(prompt, mode="dsv3"):
     '''
     Implement your own call_api function here.
     '''
-    reply = None
+    from openai import OpenAI
+
+    client = OpenAI(
+        base_url='https://api-inference.modelscope.cn/v1',
+        api_key='ms-1a1c228b-6c05-4996-9b48-5e7248501595', # ModelScope Token
+    )
+
+    response = client.chat.completions.create(
+        model='Qwen/Qwen3.5-122B-A10B', # ModelScope Model-Id, required
+        messages=[{
+            'role':
+                'user',
+            'content': [{
+                'type': 'text',
+                'text': prompt,
+            }],
+        }],
+        stream=False
+    )
+
+    reply = response.choices[0].message.content
+    print()
     return reply
 
 
@@ -64,7 +85,7 @@ class PlayerSimulator:
                      "normal":"演员会分析他人的建议或者鼓舞，并接受其中的善意，言之有理的意见和安慰都能让你感到关心",
                      "hard":"演员比较刻薄，除非有特别贴切演员情绪价值的建议或者鼓励，否演员不会接受，且可能进行讽刺"}
 
-        self.eq_role_file = "data/train_profile.jsonl"
+        self.eq_role_file = "/data/yywang/Projects/EvoMem/GitHub/digitalhuman/RLVER/data/train_profile.jsonl"
 
         self.role = self.generate_role("eq")
         self.chat_player(self.role)
@@ -72,15 +93,21 @@ class PlayerSimulator:
 
     def generate_role(self,target,topic=None,seed = random.randint(0,100)):
         with open(self.eq_role_file,'r', encoding='utf-8') as datafile:
-            data = []
-            if topic==None:
-                for line in datafile:
-                    data.append(json.loads(line))
-            else:
-                for line in datafile:
-                    if json.loads(line)["topic"]==topic:
-                        data.append(json.loads(line))
-            role = random.sample(data,1)[0]
+            all_data = [json.loads(line) for line in datafile]
+
+        if topic is None:
+            data = all_data
+        else:
+            data = [rec for rec in all_data if rec.get("topic", rec.get("task")) == topic]
+
+        if not data:
+            logging.warning("No role matched topic=%s in %s, fallback to full role pool.", topic, self.eq_role_file)
+            data = all_data
+
+        if not data:
+            raise ValueError(f"No role data found in {self.eq_role_file}")
+
+        role = random.sample(data,1)[0]
         player_data = {
             "id":role["id"],
             "emo_point": self.emo_point,
@@ -89,7 +116,7 @@ class PlayerSimulator:
             "player": role["player"],
             "scene": role["scene"],
             "character": role["main_cha"],
-            "topic": role["topic"],
+            "topic": role.get("topic", role.get("task", "")),
             "history": []
         }
         return player_data

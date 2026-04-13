@@ -147,8 +147,10 @@ def main_task(config, compute_score=None):
     else:
         raise NotImplementedError
 
-    from verl.trainer.ppo.ray_trainer import ResourcePoolManager, Role
-
+    if config.actor_rollout_ref.thinking:
+        from verl.trainer.ppo.ray_trainer_think import RayPPOTrainer, ResourcePoolManager, Role
+    else:
+        from verl.trainer.ppo.ray_trainer import RayPPOTrainer, ResourcePoolManager, Role
     role_worker_mapping = {
         Role.ActorRollout: ray.remote(ActorRolloutRefWorker),
         Role.Critic: ray.remote(CriticWorker),
