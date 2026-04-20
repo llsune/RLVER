@@ -36,6 +36,16 @@ def call_api(prompt, mode="dsv3"):
     '''
     Implement your own call_api function here.
     '''
+    src = "modelscope" # "modelscope" or "antgroup"
+    if src=="modelscope":
+        return call_api_from_modelscope(prompt, mode)
+    elif src=="antgroup":
+        return call_api_from_antgroup(prompt, mode)
+    else:
+        raise ValueError("Unsupported API source: {}".format(src))
+
+
+def call_api_from_modelscope(prompt, mode="dsv3"):
     from openai import OpenAI
 
     client = OpenAI(
@@ -57,7 +67,13 @@ def call_api(prompt, mode="dsv3"):
     )
 
     reply = response.choices[0].message.content
-    print()
+    print("call modelscope api with prompt: ", prompt)
+    print("get reply: ", reply)
+    return reply
+
+def call_api_from_antgroup(prompt, mode="dsv3"):
+    from call_llm import llm_call
+    reply = llm_call(prompt, model="MiniMax-M2.5")
     return reply
 
 
