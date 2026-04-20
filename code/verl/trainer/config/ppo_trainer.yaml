@@ -154,6 +154,11 @@ algorithm:
   lam: 1.0
   adv_estimator: gae
   kl_penalty: kl  # how to estimate kl divergence
+  # === RLVER PATCH [SCHEME-2]: Cross-turn return mixing for multi-turn environments ===
+  turn_credit:
+    enable: False
+    alpha: 0.4
+    gamma: 0.97
   kl_ctrl:
     type: fixed
     kl_coef: 0.001
