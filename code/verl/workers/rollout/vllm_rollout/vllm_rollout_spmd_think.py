@@ -692,6 +692,10 @@ class vLLMMultiTurnViaChatRollout_think(BaseRollout):
         expanded_step_rewards = []
         expanded_emo_point_list = []
         expanded_dialogue_turns = []
+        # === RLVER PATCH [SCHEME-1]: Track per-row trajectory metadata after flattening ===
+        expanded_trajectory_ids = []
+        expanded_turn_idx = []
+        expanded_trajectory_lens = []
         print("batch_size:",batch_size)
         print("dialogue_turns:",dialogue_turns)
         for i in range(batch_size*n):
@@ -701,6 +705,10 @@ class vLLMMultiTurnViaChatRollout_think(BaseRollout):
                 expanded_step_rewards.append(all_step_rewards[i][turn_idx])
                 expanded_emo_point_list.append(emo_point_list[i])
                 expanded_dialogue_turns.append(dialogue_turns[i])  
+                # === RLVER PATCH [SCHEME-1]: Row-level identifiers for trajectory-aware reward shaping/grouping ===
+                expanded_trajectory_ids.append(i)
+                expanded_turn_idx.append(turn_idx)
+                expanded_trajectory_lens.append(dialogue_turns[i])
         print("expanded_messagess:",expanded_messagess)
         print("expanded_step_rewards:",expanded_step_rewards)
         print("expanded_emo_point_list:",expanded_emo_point_list)
@@ -711,6 +719,10 @@ class vLLMMultiTurnViaChatRollout_think(BaseRollout):
             'step_reward': to_1d_np_array(expanded_step_rewards),
             'emo_point': to_1d_np_array(expanded_emo_point_list),
             'dialogue_turns': to_1d_np_array(expanded_dialogue_turns),
+            # === RLVER PATCH [SCHEME-1]: Expose trajectory metadata for cross-turn return mixing ===
+            'trajectory_id': to_1d_np_array(expanded_trajectory_ids),
+            'turn_idx': to_1d_np_array(expanded_turn_idx),
+            'trajectory_len': to_1d_np_array(expanded_trajectory_lens),
 
         }
         # free vllm cache engine

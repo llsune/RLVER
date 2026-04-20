@@ -157,6 +157,14 @@ algorithm:
   kl_ctrl:
     type: fixed
     kl_coef: 0.001
+  # === RLVER PATCH [SCHEME-2]: Cross-turn return mixing for multi-turn environments ===
+  turn_credit:
+    enable: False
+    alpha: 0.4
+    gamma: 0.97
+  kl_ctrl:
+    type: fixed
+    kl_coef: 0.001
 
 trainer:
   total_epochs: 30
