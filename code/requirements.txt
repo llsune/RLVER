@@ -145,10 +145,10 @@ sympy==1.13.1
 tensordict==0.5.0
 tiktoken==0.9.0
 tokenizers==0.21.0
-torch==2.5.1+cu124
-torchaudio==2.5.1+cu124
+# torch==2.5.1+cu124
+# torchaudio==2.5.1+cu124
 torchdata==0.11.0
-torchvision==0.20.1+cu124
+# torchvision==0.20.1+cu124
 tqdm==4.67.1
 transformers==4.48.3
 triton==3.1.0
@@ -158,7 +158,7 @@ tzdata==2025.1
 urllib3==2.3.0
 uvicorn==0.34.0
 uvloop==0.21.0
--e git+https://github.com/zwhe99/verl.git@c13b1ac24a6fdcbcaf33c77b514704bed510dfe2#egg=verl
+# -e git+https://github.com/zwhe99/verl.git@c13b1ac24a6fdcbcaf33c77b514704bed510dfe2#egg=verl
 virtualenv==20.29.2
 vllm==0.7.3
 wandb==0.19.6
