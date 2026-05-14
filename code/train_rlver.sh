@@ -7,12 +7,12 @@ set -u
 # - 你的硬件是单机 8×3090（24GB），因此需要把“上下文长度/每轮生成长度/每 GPU token 上限”等显存相关参数调低。
 # - 不再在脚本中硬编码 W&B Token：请在运行前导出环境变量 WANDB_API_KEY 或 WANDB_TOKEN。
 
-RUN_NAME="rlver-reproduction-qwen2.5-1.5b-ppo-thinking"
+RUN_NAME="rlver-reproduction-qwen2.5-1.5b-grpo-thinking"
 IF_THINK=True
-DIR_TO_SAVE_CKPTS="/data/yywang/Projects/EvoMem/GitHub/digitalhuman/RLVER/reproduction/qwen2.5-1.5b-ppo-thinking/checkpoints"
+DIR_TO_SAVE_CKPTS="/data/yywang/Projects/EvoMem/GitHub/digitalhuman/RLVER/reproduction/qwen2.5-1.5b-grpo-thinking/checkpoints"
 # 屏蔽被占用的 4、7 号 GPU，仅使用 0,1,2,3,5,6
-export CUDA_VISIBLE_DEVICES="0,1,2,3,4,5,6,7"
-N_GPUS_PER_NODE=8
+export CUDA_VISIBLE_DEVICES="0,1,2,3"
+N_GPUS_PER_NODE=4
 export RAY_OVERRIDE_JOB_RUNTIME_ENV=1
 export RAY_record_ref_creation_sites=1
 export HYDRA_FULL_ERROR=1
